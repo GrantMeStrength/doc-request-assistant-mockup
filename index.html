@@ -215,22 +215,45 @@
   <h2>2. Confirmation card (Adaptive Card, posted in the same thread)</h2>
   <div class="card">
     <h4>📝 Confirm doc request before creating ADO item</h4>
-    <div class="card-row"><span class="k">Title</span><span class="v">Add widget provider registration section</span></div>
-    <div class="card-row"><span class="k">Area</span><span class="v">Dev Home → Extensibility</span></div>
-    <div class="card-row"><span class="k">Repo</span><span class="v">windows-dev-docs-pr</span></div>
-    <div class="card-row"><span class="k">Type</span><span class="v">New section (existing article)</span></div>
-    <div class="card-row"><span class="k">Target article</span><span class="v">hub/dev-home/extend-dev-home.md</span></div>
+    <div class="card-row"><span class="k">Title</span><span class="v">[request] new-topic: Add widget provider registration section</span></div>
+    <div class="card-row"><span class="k">Work item type</span><span class="v">Task · Content project</span></div>
+    <div class="card-row"><span class="k">Area path</span><span class="v">Content\Dev Home\Extensibility</span></div>
+    <div class="card-row"><span class="k">Target repo / file</span><span class="v">windows-dev-docs-pr · hub/dev-home/extend-dev-home.md</span></div>
+    <div class="card-row"><span class="k">Tags</span><span class="v">kind:new-topic, risk:low, auto:detected, dedupe:7f2a91c4e3b0</span></div>
+    <div class="card-row"><span class="k">Routed skill</span><span class="v">— <span class="badge amber">human triage (no auto-skill for new-topic)</span></span></div>
     <div class="card-row"><span class="k">Go-live</span><span class="v">Tue, Oct 14 <span class="badge amber">Scheduled</span></span></div>
     <div class="card-row"><span class="k">Source of truth</span><span class="v">devhome-widget-spec, PR #4821</span></div>
     <div class="card-row"><span class="k">Reviewer</span><span class="v">You (Priya) — before merge</span></div>
-    <div class="card-row"><span class="k">Risk / mode</span><span class="v">Low <span class="badge green">Autopilot eligible</span></span></div>
     <div class="card-actions">
       <button class="btn primary">✅ Confirm &amp; create ADO item</button>
       <button class="btn secondary">✏️ Edit details</button>
     </div>
   </div>
-  <p style="color:var(--muted);font-size:13px;max-width:460px;">
+
+  <h3 style="margin-top:22px;">What actually gets written to ADO</h3>
+  <p style="color:var(--muted);font-size:13px;max-width:620px;">
+  No custom fields or work item types — everything maps onto <code>System.Title</code>, <code>System.AreaPath</code>,
+  tags, and a machine-parseable comment block in <code>System.Description</code>, per the existing
+  <code>work-item-schema.md</code> ledger convention already used by the scheduled sweeper. This keeps chat-filed
+  requests and automatically-detected findings in <b>one consistent queue</b> the sweeper can read.
+  </p>
+  <pre style="background:#0f172a;color:#d1e7ff;padding:14px 16px;border-radius:8px;font-size:12.5px;overflow-x:auto;max-width:620px;line-height:1.5;">&lt;!-- docs-automation:v1
+dedupe: intake-chat:windows-dev-docs-pr:a1f9-...-7e21:new-topic
+source_system: intake-chat
+source_url: teams://conversation/19:meeting_...  (Teams thread link)
+task_kind: new-topic
+risk: low
+routed_skill: (none — human triage)
+target_repo: MicrosoftDocs/windows-dev-docs-pr
+target_file: hub/dev-home/extend-dev-home.md
+go_live: 2026-10-14
+source_of_truth: aka.ms/devhome-widget-spec, github.com/microsoft/devhome/pull/4821
+requested_by: priya@microsoft.com
+created_by: intake-chat-agent
+-- &gt;</pre>
+  <p style="color:var(--muted);font-size:13px;max-width:620px;">
   Confirming creates the ADO work item immediately, tagged with these fields, but <b>defers the agent kickoff</b> until Oct 14 since go-live is scheduled.
+  Note: <code>new-topic</code> has no auto-skill in v1 — it's filed straight to <code>auto:waiting-human</code> so a writer picks it up, rather than silently stalling.
   </p>
 </div>
 
