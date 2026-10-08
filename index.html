@@ -233,11 +233,12 @@
   <h3 style="margin-top:22px;">What actually gets written to ADO</h3>
   <p style="color:var(--muted);font-size:13px;max-width:620px;">
   No custom fields or work item types — everything maps onto <code>System.Title</code>, <code>System.AreaPath</code>,
-  tags, and a machine-parseable comment block in <code>System.Description</code>, per the existing
+  tags, and a machine-parseable block in <code>System.Description</code>, per the existing
   <code>work-item-schema.md</code> ledger convention already used by the scheduled sweeper. This keeps chat-filed
   requests and automatically-detected findings in <b>one consistent queue</b> the sweeper can read.
   </p>
-  <pre style="background:#0f172a;color:#d1e7ff;padding:14px 16px;border-radius:8px;font-size:12.5px;overflow-x:auto;max-width:620px;line-height:1.5;">&lt;!-- docs-automation:v1
+  <pre style="background:#0f172a;color:#d1e7ff;padding:14px 16px;border-radius:8px;font-size:12.5px;overflow-x:auto;max-width:620px;line-height:1.5;">```yaml
+docs-automation:v1
 dedupe: intake-chat:windows-dev-docs-pr:a1f9-...-7e21:new-topic
 source_system: intake-chat
 source_url: teams://conversation/19:meeting_...  (Teams thread link)
@@ -250,7 +251,14 @@ go_live: 2026-10-14
 source_of_truth: aka.ms/devhome-widget-spec, github.com/microsoft/devhome/pull/4821
 requested_by: priya@microsoft.com
 created_by: intake-chat-agent
--- &gt;</pre>
+```</pre>
+  <p style="color:var(--muted);font-size:12px;max-width:620px;background:#fff8e1;border-left:3px solid #f0c419;padding:8px 10px;">
+  ⚠️ <b>Live-tested correction:</b> the schema doc originally specced this as an HTML comment
+  (<code>&lt;!-- ... --&gt;</code>). Validating against a real ADO item showed <b>ADO silently
+  strips HTML comments from the description field</b> — the whole block vanished on save. A
+  fenced <code>```yaml</code> code block (shown above) survives a save/reload round trip, so
+  that's the corrected convention for the ADO backend.
+  </p>
   <p style="color:var(--muted);font-size:13px;max-width:620px;">
   Confirming creates the ADO work item immediately, tagged with these fields, but <b>defers the agent kickoff</b> until Oct 14 since go-live is scheduled.
   Note: <code>new-topic</code> has no auto-skill in v1 — it's filed straight to <code>auto:waiting-human</code> so a writer picks it up, rather than silently stalling.
