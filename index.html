@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Doc Request Assistant — UI Mockup</title>
+<style>
+  :root{
+    --teams-purple:#5b5fc7;
+    --teams-purple-dark:#464775;
+    --bg:#f5f5f5;
+    --card:#ffffff;
+    --border:#e1e1e1;
+    --text:#242424;
+    --muted:#616161;
+    --green:#107c10;
+    --amber:#986f0b;
+    --blue:#0078d4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Segoe UI', Arial, sans-serif;
+    margin:0; background:var(--bg); color:var(--text);
+  }
+  .tabs{
+    display:flex; gap:4px; background:var(--teams-purple-dark); padding:0 16px;
+  }
+  .tab{
+    padding:12px 20px; color:#e4e3f7; cursor:pointer; font-size:14px;
+    border-bottom:3px solid transparent;
+  }
+  .tab.active{ color:#fff; border-bottom:3px solid #fff; font-weight:600; background:var(--teams-purple);}
+  .view{ display:none; padding:20px; max-width:900px; margin:0 auto; }
+  .view.active{ display:block; }
+
+  /* ---- Teams chat mock ---- */
+  .teams-shell{
+    background:#fff; border:1px solid var(--border); border-radius:8px; overflow:hidden;
+    box-shadow:0 1px 4px rgba(0,0,0,.08);
+  }
+  .teams-header{
+    background:var(--teams-purple); color:#fff; padding:12px 16px; display:flex; align-items:center; gap:10px; font-weight:600;
+  }
+  .teams-header .dot{ width:10px;height:10px;border-radius:50%;background:#92c353; }
+  .chat-body{ padding:18px; min-height:420px; display:flex; flex-direction:column; gap:14px; background:#fafafa;}
+  .msg{ display:flex; gap:10px; max-width:80%; }
+  .msg.bot{ align-self:flex-start; }
+  .msg.user{ align-self:flex-end; flex-direction:row-reverse; }
+  .avatar{ width:32px;height:32px;border-radius:50%; flex-shrink:0; display:flex;align-items:center;justify-content:center; font-size:14px; font-weight:700; color:#fff;}
+  .avatar.bot{ background:var(--teams-purple); }
+  .avatar.user{ background:#498205; }
+  .bubble{ padding:10px 14px; border-radius:10px; font-size:14px; line-height:1.45; }
+  .msg.bot .bubble{ background:#fff; border:1px solid var(--border); border-top-left-radius:2px; }
+  .msg.user .bubble{ background:#e8ebfa; border-top-right-radius:2px; }
+  .quick-replies{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .chip{ border:1px solid var(--teams-purple); color:var(--teams-purple); background:#fff; padding:6px 12px; border-radius:16px; font-size:13px; cursor:pointer; }
+  .chip:hover{ background:#eceefc; }
+
+  /* Adaptive card */
+  .card{
+    border:1px solid var(--border); border-radius:8px; background:#fff; padding:14px 16px; max-width:460px; font-size:13.5px;
+  }
+  .card h4{ margin:0 0 10px; font-size:14px; }
+  .card-row{ display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed #eee; }
+  .card-row:last-of-type{ border-bottom:none; }
+  .card-row .k{ color:var(--muted); }
+  .card-row .v{ font-weight:600; text-align:right; max-width:60%; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700; }
+  .badge.amber{ background:#fdf0d5; color:var(--amber); }
+  .badge.green{ background:#dff6dd; color:var(--green); }
+  .card-actions{ display:flex; gap:8px; margin-top:12px; }
+  .btn{ padding:7px 16px; border-radius:4px; border:none; font-size:13px; font-weight:600; cursor:pointer; }
+  .btn.primary{ background:var(--teams-purple); color:#fff; }
+  .btn.secondary{ background:#fff; border:1px solid #c7c7c7; color:var(--text); }
+  .chat-input{ display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--border); background:#fff; }
+  .chat-input input{ flex:1; padding:9px 12px; border:1px solid var(--border); border-radius:18px; font-size:13.5px; }
+  .chat-input button{ background:var(--teams-purple); color:#fff; border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; }
+
+  /* ---- Dashboard mock ---- */
+  .kpi-row{ display:flex; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .kpi{ background:#fff; border:1px solid var(--border); border-radius:8px; padding:14px 18px; flex:1; min-width:140px; }
+  .kpi .num{ font-size:26px; font-weight:700; }
+  .kpi .lbl{ font-size:12.5px; color:var(--muted); margin-top:2px;}
+  table{ width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+  th,td{ text-align:left; padding:10px 12px; font-size:13.5px; border-bottom:1px solid #f0f0f0; }
+  th{ background:#faf9fd; color:var(--muted); font-weight:600; font-size:12.5px; text-transform:uppercase; letter-spacing:.02em; }
+  tr:last-child td{ border-bottom:none; }
+  .status{ padding:3px 9px; border-radius:10px; font-size:11.5px; font-weight:700; }
+  .status.review{ background:#fdf0d5; color:var(--amber);}
+  .status.merged{ background:#dff6dd; color:var(--green);}
+  .status.sched{ background:#deecf9; color:var(--blue);}
+  .status.progress{ background:#f3e8fd; color:#8764b8;}
+  h2{ font-size:20px; margin-top:0; }
+  .section-lbl{ font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); font-weight:700; margin:22px 0 8px; }
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <div class="tab active" data-view="chat">💬 Teams Intake Flow</div>
+  <div class="tab" data-view="card">📋 Confirmation Card</div>
+  <div class="tab" data-view="dashboard">📊 Tracking Dashboard</div>
+</div>
+
+<!-- VIEW 1: Chat flow -->
+<div class="view active" id="view-chat">
+  <h2>1. Intake conversation (Teams bot: "Docs Assistant")</h2>
+  <div class="teams-shell">
+    <div class="teams-header"><span class="dot"></span> Docs Assistant <span style="font-weight:400;opacity:.85;font-size:12px;">— direct message</span></div>
+    <div class="chat-body">
+      <div class="msg bot">
+        <div class="avatar bot">DA</div>
+        <div class="bubble">Hi Priya 👋 What would you like to change or add in the docs?</div>
+      </div>
+      <div class="msg user">
+        <div class="avatar user">P</div>
+        <div class="bubble">The Dev Home extensibility page doesn't mention the new widget provider API we shipped. Need a new section explaining how to register one.</div>
+      </div>
+      <div class="msg bot">
+        <div class="avatar bot">DA</div>
+        <div class="bubble">Got it — adding a new section to <b>Dev Home extensibility</b> on widget provider registration. Two quick things:<br><br>
+          <b>When does this need to go live?</b></div>
+      </div>
+      <div class="quick-replies" style="margin-left:42px;">
+        <div class="chip">🔴 ASAP</div>
+        <div class="chip" style="border-color:var(--teams-purple);background:#eceefc;">📅 Specific date</div>
+        <div class="chip">🕊️ No rush</div>
+      </div>
+      <div class="msg user">
+        <div class="avatar user">P</div>
+        <div class="bubble">Needs to be live by next Tuesday — ships with the Dev Home 1.4 release.</div>
+      </div>
+      <div class="msg bot">
+        <div class="avatar bot">DA</div>
+        <div class="bubble">📅 Scheduled for <b>Tue, Oct 14</b>. Last one — do you have a spec, sample, or PR I should pull accurate API details from, so I don't guess at parameters?</div>
+      </div>
+      <div class="msg user">
+        <div class="avatar user">P</div>
+        <div class="bubble">Yep: aka.ms/devhome-widget-spec and the sample in github.com/microsoft/devhome/pull/4821</div>
+      </div>
+      <div class="msg bot">
+        <div class="avatar bot">DA</div>
+        <div class="bubble">Perfect, that's everything I need. One sec while I draft a summary... ✅</div>
+      </div>
+    </div>
+    <div class="chat-input">
+      <input type="text" placeholder="Type a message" disabled>
+      <button>➤</button>
+    </div>
+  </div>
+  <p style="color:var(--muted);font-size:13px;margin-top:10px;">
+  💡 Notice the bot only asked <b>two</b> questions — timing and source-of-truth — because the rest (area, repo, audience) was inferable from the free text. A simpler request (e.g. "fix this typo") would skip straight to the confirmation card.
+  </p>
+</div>
+
+<!-- VIEW 2: Adaptive card -->
+<div class="view" id="view-card">
+  <h2>2. Confirmation card (Adaptive Card, posted in the same thread)</h2>
+  <div class="card">
+    <h4>📝 Confirm doc request before creating ADO item</h4>
+    <div class="card-row"><span class="k">Title</span><span class="v">Add widget provider registration section</span></div>
+    <div class="card-row"><span class="k">Area</span><span class="v">Dev Home → Extensibility</span></div>
+    <div class="card-row"><span class="k">Repo</span><span class="v">windows-dev-docs-pr</span></div>
+    <div class="card-row"><span class="k">Type</span><span class="v">New section (existing article)</span></div>
+    <div class="card-row"><span class="k">Target article</span><span class="v">hub/dev-home/extend-dev-home.md</span></div>
+    <div class="card-row"><span class="k">Go-live</span><span class="v">Tue, Oct 14 <span class="badge amber">Scheduled</span></span></div>
+    <div class="card-row"><span class="k">Source of truth</span><span class="v">devhome-widget-spec, PR #4821</span></div>
+    <div class="card-row"><span class="k">Reviewer</span><span class="v">You (Priya) — before merge</span></div>
+    <div class="card-row"><span class="k">Risk / mode</span><span class="v">Low <span class="badge green">Autopilot eligible</span></span></div>
+    <div class="card-actions">
+      <button class="btn primary">✅ Confirm &amp; create ADO item</button>
+      <button class="btn secondary">✏️ Edit details</button>
+    </div>
+  </div>
+  <p style="color:var(--muted);font-size:13px;max-width:460px;">
+  Confirming creates the ADO work item immediately, tagged with these fields, but <b>defers the agent kickoff</b> until Oct 14 since go-live is scheduled.
+  </p>
+</div>
+
+<!-- VIEW 3: Dashboard -->
+<div class="view" id="view-dashboard">
+  <h2>3. Request tracking dashboard (web portal)</h2>
+  <div class="kpi-row">
+    <div class="kpi"><div class="num">23</div><div class="lbl">Requests this month</div></div>
+    <div class="kpi"><div class="num">14</div><div class="lbl">Merged</div></div>
+    <div class="kpi"><div class="num">1.8d</div><div class="lbl">Avg. request → PR</div></div>
+    <div class="kpi"><div class="num">4</div><div class="lbl">Awaiting SME review</div></div>
+  </div>
+
+  <div class="section-lbl">Recent requests</div>
+  <table>
+    <tr><th>Request</th><th>Repo</th><th>Submitted by</th><th>Go-live</th><th>Status</th><th>Link</th></tr>
+    <tr>
+      <td>Add widget provider registration section</td><td>windows-dev-docs</td><td>Priya K.</td><td>Oct 14</td>
+      <td><span class="status sched">Scheduled</span></td><td>ADO-10421</td>
+    </tr>
+    <tr>
+      <td>Fix broken link in WinUI theming guide</td><td>windows-dev-docs</td><td>Sam R.</td><td>ASAP</td>
+      <td><span class="status review">In PR review</span></td><td>PR #2291</td>
+    </tr>
+    <tr>
+      <td>Update MSIX signing cert guidance</td><td>msix-pr</td><td>Dana W.</td><td>No rush</td>
+      <td><span class="status progress">Agent working</span></td><td>ADO-10418</td>
+    </tr>
+    <tr>
+      <td>Clarify WinRT→WinAppSDK migration note</td><td>sdk-api</td><td>Jon T.</td><td>ASAP</td>
+      <td><span class="status merged">Merged</span></td><td>PR #1904</td>
+    </tr>
+    <tr>
+      <td>New quickstart: Dev Drive setup</td><td>windows-dev-docs</td><td>Priya K.</td><td>Oct 20</td>
+      <td><span class="status sched">Scheduled</span></td><td>ADO-10430</td>
+    </tr>
+  </table>
+
+  <div class="section-lbl">Where requests get stuck</div>
+  <table>
+    <tr><th>Stage</th><th>Count</th><th>Typical cause</th></tr>
+    <tr><td>Clarifying questions abandoned</td><td>3</td><td>SME didn't respond to follow-up</td></tr>
+    <tr><td>Agent plan rejected</td><td>2</td><td>Scope larger than SME expected</td></tr>
+    <tr><td>PR review pending &gt;3 days</td><td>4</td><td>Doc owner reviewer unavailable</td></tr>
+  </table>
+</div>
+
+<script>
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('view-'+tab.dataset.view).classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
