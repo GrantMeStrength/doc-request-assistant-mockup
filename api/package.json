@@ -1,0 +1,13 @@
+{
+  "name": "doc-request-intake-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Azure Functions API backing the chat-based ADO intake prototype.",
+  "main": "chat/index.js",
+  "scripts": {
+    "start": "func start"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

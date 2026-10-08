@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Doc Request Assistant — Live Chat (real AI)</title>
+<style>
+  :root{
+    --teams-purple:#5b5fc7;
+    --teams-purple-dark:#464775;
+    --bg:#f5f5f5;
+    --card:#ffffff;
+    --border:#e1e1e1;
+    --text:#242424;
+    --muted:#616161;
+    --green:#107c10;
+    --amber:#986f0b;
+    --blue:#0078d4;
+  }
+  *{box-sizing:border-box;}
+  body{ font-family:'Segoe UI', Arial, sans-serif; margin:0; background:var(--bg); color:var(--text); }
+  .wrap{ max-width:720px; margin:0 auto; padding:20px; }
+  .banner{
+    background:#fff4ce; border:1px solid #f0c419; border-radius:8px; padding:10px 14px;
+    font-size:13px; margin-bottom:14px; line-height:1.5;
+  }
+  .banner a{ color:var(--teams-purple-dark); }
+  .teams-shell{ background:#fff; border:1px solid var(--border); border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .teams-header{ background:var(--teams-purple); color:#fff; padding:12px 16px; display:flex; align-items:center; gap:10px; font-weight:600; }
+  .teams-header .dot{ width:10px;height:10px;border-radius:50%;background:#92c353; }
+  .chat-body{ padding:18px; min-height:420px; max-height:60vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px; background:#fafafa;}
+  .msg{ display:flex; gap:10px; max-width:85%; }
+  .msg.bot{ align-self:flex-start; }
+  .msg.user{ align-self:flex-end; flex-direction:row-reverse; }
+  .avatar{ width:32px;height:32px;border-radius:50%; flex-shrink:0; display:flex;align-items:center;justify-content:center; font-size:14px; font-weight:700; color:#fff;}
+  .avatar.bot{ background:var(--teams-purple); }
+  .avatar.user{ background:#498205; }
+  .bubble{ padding:10px 14px; border-radius:10px; font-size:14px; line-height:1.45; white-space:pre-wrap; }
+  .msg.bot .bubble{ background:#fff; border:1px solid var(--border); border-top-left-radius:2px; }
+  .msg.user .bubble{ background:#e8ebfa; border-top-right-radius:2px; }
+  .chat-input{ display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--border); background:#fff; }
+  .chat-input input{ flex:1; padding:9px 12px; border:1px solid var(--border); border-radius:18px; font-size:13.5px; }
+  .chat-input button{ background:var(--teams-purple); color:#fff; border:none; border-radius:50%; width:36px; height:36px; cursor:pointer; }
+  .chat-input button:disabled{ opacity:.5; cursor:default; }
+  .card{ border:1px solid var(--border); border-radius:8px; background:#fff; padding:14px 16px; max-width:460px; font-size:13.5px; margin-top:4px; }
+  .card h4{ margin:0 0 10px; font-size:14px; }
+  .card-row{ display:flex; justify-content:space-between; gap:12px; padding:5px 0; border-bottom:1px dashed #eee; }
+  .card-row:last-of-type{ border-bottom:none; }
+  .card-row .k{ color:var(--muted); flex-shrink:0; }
+  .card-row .v{ font-weight:600; text-align:right; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700; }
+  .badge.amber{ background:#fdf0d5; color:var(--amber); }
+  .badge.green{ background:#dff6dd; color:var(--green); }
+  .card-actions{ display:flex; gap:8px; margin-top:12px; }
+  .btn{ padding:7px 16px; border-radius:4px; border:none; font-size:13px; font-weight:600; cursor:pointer; }
+  .btn.primary{ background:var(--teams-purple); color:#fff; }
+  .btn.secondary{ background:#fff; border:1px solid #c7c7c7; color:var(--text); }
+  .typing{ font-size:13px; color:var(--muted); font-style:italic; padding:0 16px 12px; }
+  h2{ font-size:20px; margin:0 0 6px; }
+  .sub{ color:var(--muted); font-size:13px; margin:0 0 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2>💬 Doc Request Intake — Live Chat</h2>
+  <p class="sub">Real conversation, backed by Azure OpenAI. Describe what you need — the agent will ask
+  a couple of clarifying questions, then propose a card for you to confirm. This prototype only
+  previews the card; it does not create the ADO item yet.</p>
+  <div class="banner">
+    ⚠️ This page calls <code>/api/chat</code>, a small Azure Functions API that holds the Azure OpenAI
+    key server-side. It only works once deployed to Azure Static Web Apps with that API configured —
+    it will show a connection error on GitHub Pages or when opened as a local file. See
+    <a href="https://github.com/GrantMeStrength/doc-request-assistant-mockup/blob/main/DEPLOY.md">DEPLOY.md</a>
+    for setup. &nbsp;|&nbsp; <a href="index.html">← back to the mockup</a>
+  </div>
+
+  <div class="teams-shell">
+    <div class="teams-header"><span class="dot"></span> Doc Request Assistant</div>
+    <div class="chat-body" id="chatBody"></div>
+    <div class="typing" id="typing" style="display:none;">Doc Request Assistant is typing…</div>
+    <div class="chat-input">
+      <input id="msgInput" type="text" placeholder="Describe the doc issue or request…" autocomplete="off">
+      <button id="sendBtn" aria-label="Send">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = "/api/chat";
+const chatBody = document.getElementById("chatBody");
+const input = document.getElementById("msgInput");
+const sendBtn = document.getElementById("sendBtn");
+const typing = document.getElementById("typing");
+
+let messages = [];
+let cardShown = false;
+
+function addBubble(role, text) {
+  const row = document.createElement("div");
+  row.className = "msg " + (role === "user" ? "user" : "bot");
+  row.innerHTML = `
+    <div class="avatar ${role === "user" ? "user" : "bot"}">${role === "user" ? "You" : "AI"}</div>
+    <div class="bubble"></div>`;
+  row.querySelector(".bubble").textContent = text;
+  chatBody.appendChild(row);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function addCard(card) {
+  const row = document.createElement("div");
+  row.className = "msg bot";
+  const riskBadge = card.risk === "low"
+    ? '<span class="badge green">low</span>'
+    : `<span class="badge amber">${escapeHtml(card.risk || "unspecified")}</span>`;
+  row.innerHTML = `
+    <div class="avatar bot">AI</div>
+    <div class="card">
+      <h4>📋 Proposed work item</h4>
+      <div class="card-row"><span class="k">Title</span><span class="v">${escapeHtml(card.title || "")}</span></div>
+      <div class="card-row"><span class="k">Task kind</span><span class="v">${escapeHtml(card.task_kind || "")}</span></div>
+      <div class="card-row"><span class="k">Risk</span><span class="v">${riskBadge}</span></div>
+      <div class="card-row"><span class="k">Target</span><span class="v">${escapeHtml(card.target_repo || "")}${card.target_file ? " / " + escapeHtml(card.target_file) : ""}</span></div>
+      <div class="card-row"><span class="k">Go live</span><span class="v">${escapeHtml(card.go_live || "")}</span></div>
+      <div class="card-row"><span class="k">Source of truth</span><span class="v">${escapeHtml(card.source_of_truth || "")}</span></div>
+      <div class="card-row"><span class="k">Requested by</span><span class="v">${escapeHtml(card.requested_by || "")}</span></div>
+      <div class="card-row"><span class="k">Summary</span><span class="v">${escapeHtml(card.summary || "")}</span></div>
+      <div class="card-actions">
+        <button class="btn primary" id="confirmBtn">Confirm (preview only)</button>
+        <button class="btn secondary" id="editBtn">Needs changes</button>
+      </div>
+    </div>`;
+  chatBody.appendChild(row);
+  chatBody.scrollTop = chatBody.scrollHeight;
+
+  row.querySelector("#confirmBtn").addEventListener("click", () => {
+    addBubble("bot",
+      "✅ This is a prototype — I'm not calling Azure DevOps yet. In the real version, confirming " +
+      "here would run the dedupe check and then create this as a Content work item, tagged " +
+      `kind:${card.task_kind}, risk:${card.risk}, dedupe:<hash of "${card.dedupe_seed || "this request"}">.`);
+  });
+  row.querySelector("#editBtn").addEventListener("click", () => {
+    input.focus();
+    input.placeholder = "What should change about the card above?";
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+async function send() {
+  const text = input.value.trim();
+  if (!text || cardShown) return;
+  addBubble("user", text);
+  messages.push({ role: "user", content: text });
+  input.value = "";
+  sendBtn.disabled = true;
+  typing.style.display = "block";
+
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages }),
+    });
+    const data = await resp.json();
+    typing.style.display = "none";
+    sendBtn.disabled = false;
+
+    if (!resp.ok) {
+      addBubble("bot", "⚠️ " + (data.error || "Something went wrong calling the API."));
+      return;
+    }
+
+    if (data.reply) {
+      addBubble("bot", data.reply);
+      messages.push({ role: "assistant", content: data.reply });
+    }
+    if (data.card && data.card.ready) {
+      addCard(data.card);
+      cardShown = true;
+      input.placeholder = "Conversation complete — see the card above.";
+    }
+  } catch (err) {
+    typing.style.display = "none";
+    sendBtn.disabled = false;
+    addBubble("bot", "⚠️ Couldn't reach /api/chat. If you're viewing this on GitHub Pages or as a " +
+      "local file, this only works once deployed to Azure Static Web Apps — see DEPLOY.md.");
+  }
+}
+
+sendBtn.addEventListener("click", send);
+input.addEventListener("keydown", e => { if (e.key === "Enter") send(); });
+
+addBubble("bot", "Hi! Tell me about the doc issue or request — as much or as little detail as you have.");
+</script>
+</body>
+</html>

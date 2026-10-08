@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AZURE_OPENAI_ENDPOINT": "https://<your-resource>.openai.azure.com",
+    "AZURE_OPENAI_API_KEY": "<your-key>",
+    "AZURE_OPENAI_DEPLOYMENT": "<your-deployment-name>",
+    "AZURE_OPENAI_API_VERSION": "2024-06-01"
+  }
+}
