@@ -35,14 +35,24 @@ Add a **"Send an HTTP request to Azure DevOps"** action (part of the standard Az
 DevOps connector) to run a WIQL query for an existing item tagged with this
 `dedupe_hash`:
 
+- **Organization Name**: `msft-skilling`
 - Method: `POST`
-- Relative URL: `_apis/wit/wiql?api-version=7.0`
+- Relative URL: `Content/_apis/wit/wiql?api-version=7.0`
 - Body:
 ```json
 {
-  "query": "SELECT [System.Id] FROM WorkItems WHERE [System.Tags] CONTAINS 'dedupe:@{triggerBody()?['dedupe_hash']}'"
+  "query": "SELECT [System.Id] FROM WorkItems WHERE [System.Tags] CONTAINS 'dedupe:@{triggerBody()?['dedupe_hash']}' AND [System.TeamProject] = 'Content'"
 }
 ```
+
+> **Note:** the ADO *project* here (`Content`, org `msft-skilling`) is the shared intake
+> ledger used by the existing sweeper + GitHub-issue intake pipeline, not tied to any one
+> GitHub docs repo. A single request might target `windows-dev-docs-pr`, `win32-pr`,
+> `windows-ai-docs-pr`, `msix-pr`, etc. — that's captured in the `target_repo` field and
+> the Description body, not by the ADO project. Don't confuse this with `windows-uwp`,
+> which is a *different* ADO project (org `cpubwin`) used only for WinRT/Win32 API
+> reference content and was the throwaway project used for the earlier one-off live test
+> (`windows-uwp#61017`).
 
 Add a **Condition**: `length(body('Send_an_HTTP_request_to_Azure_DevOps')?['workItems'])` is
 greater than `0`.
@@ -57,7 +67,8 @@ Add **"Create a work item"** (Azure DevOps connector), inside the "If no" branch
 
 | Field | Value |
 |---|---|
-| Organization / Project | `Content` (or your real target project — see note below) |
+| Organization | `msft-skilling` |
+| Project | `Content` |
 | Work item type | `Task` |
 | Title | `triggerBody()?['title']` |
 | Tags | `concat('kind:', triggerBody()?['task_kind'], '; risk:', triggerBody()?['risk'], '; auto:detected; dedupe:', triggerBody()?['dedupe_hash'])` |
