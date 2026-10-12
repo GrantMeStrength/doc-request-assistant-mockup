@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Doc Request Assistant — Submit a Request</title>
+<style>
+  :root{
+    --teams-purple:#5b5fc7;
+    --teams-purple-dark:#464775;
+    --bg:#f5f5f5;
+    --border:#e1e1e1;
+    --text:#242424;
+    --muted:#616161;
+    --green:#107c10;
+    --amber:#986f0b;
+    --red:#a4262c;
+  }
+  *{box-sizing:border-box;}
+  body{ font-family:'Segoe UI', Arial, sans-serif; margin:0; background:var(--bg); color:var(--text); }
+  .wrap{ max-width:640px; margin:0 auto; padding:24px 20px 60px; }
+  h2{ font-size:20px; margin:0 0 6px; }
+  .sub{ color:var(--muted); font-size:13px; margin:0 0 18px; line-height:1.5; }
+  .banner{
+    background:#fff4ce; border:1px solid #f0c419; border-radius:8px; padding:10px 14px;
+    font-size:13px; margin-bottom:18px; line-height:1.5;
+  }
+  form{ background:#fff; border:1px solid var(--border); border-radius:8px; padding:22px; }
+  .field{ margin-bottom:16px; }
+  label{ display:block; font-size:13px; font-weight:600; margin-bottom:5px; }
+  label .hint{ font-weight:400; color:var(--muted); display:block; font-size:12px; margin-top:2px; }
+  input[type=text], input[type=date], select, textarea{
+    width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:5px; font-size:13.5px;
+    font-family:inherit;
+  }
+  textarea{ min-height:70px; resize:vertical; }
+  .row2{ display:flex; gap:14px; }
+  .row2 > .field{ flex:1; }
+  fieldset{ border:none; padding:0; margin:0 0 16px; }
+  .radio-row{ display:flex; gap:16px; flex-wrap:wrap; margin-top:4px; }
+  .radio-row label{ font-weight:400; display:flex; align-items:center; gap:6px; font-size:13.5px; }
+  .btn{ padding:10px 22px; border-radius:5px; border:none; font-size:14px; font-weight:600; cursor:pointer; }
+  .btn.primary{ background:var(--teams-purple); color:#fff; }
+  .btn.primary:disabled{ opacity:.55; cursor:default; }
+  .status{ margin-top:16px; padding:12px 14px; border-radius:6px; font-size:13.5px; line-height:1.5; display:none; }
+  .status.show{ display:block; }
+  .status.ok{ background:#dff6dd; border:1px solid var(--green); }
+  .status.err{ background:#fdeaea; border:1px solid var(--red); }
+  .status a{ color:var(--teams-purple-dark); font-weight:600; }
+  .back{ font-size:13px; }
+  code{ background:#f3f2f1; padding:1px 5px; border-radius:3px; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="back"><a href="index.html">← back to the mockup</a></p>
+  <h2>📋 Submit a documentation request</h2>
+  <p class="sub">Fill this in and it files a tracked work item directly — no chat needed for this version.
+  A writer or agent picks it up from there.</p>
+
+  <div class="banner" id="configBanner">
+    ⚠️ This form posts to a Power Automate flow URL that isn't configured yet. Set
+    <code>FLOW_URL</code> near the bottom of this file once your flow is published (see
+    <a href="POWER-AUTOMATE-SETUP.md">POWER-AUTOMATE-SETUP.md</a>). Until then, submitting will show an error.
+  </div>
+
+  <form id="requestForm">
+    <div class="field">
+      <label for="summary">What needs to change or be created?
+        <span class="hint">One or two sentences is enough.</span>
+      </label>
+      <textarea id="summary" required placeholder="e.g. The Dev Home extensibility article is missing a section on registering a widget provider."></textarea>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="taskKind">Type of request</label>
+        <select id="taskKind" required>
+          <option value="">Choose…</option>
+          <option value="topic-fix">Fix wrong/outdated content</option>
+          <option value="broken-link">Broken link</option>
+          <option value="sdk-update">SDK/API surface changed</option>
+          <option value="terminology">Terminology (e.g. UWP → Windows App SDK)</option>
+          <option value="new-topic">New topic or new section</option>
+          <option value="triage">Not sure / something else</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="risk">Risk level
+          <span class="hint">Unsure? Leave as Low — a writer will re-check.</span>
+        </label>
+        <select id="risk" required>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="critical">Critical (compliance/security/pricing)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="targetRepo">Target repo <span class="hint">If known</span></label>
+        <input type="text" id="targetRepo" placeholder="e.g. MicrosoftDocs/windows-dev-docs-pr">
+      </div>
+      <div class="field">
+        <label for="targetFile">Article/file <span class="hint">If known</span></label>
+        <input type="text" id="targetFile" placeholder="e.g. hub/dev-home/extend-dev-home.md">
+      </div>
+    </div>
+
+    <fieldset class="field">
+      <label>Does this need to go live on a specific date?</label>
+      <div class="radio-row">
+        <label><input type="radio" name="goLiveMode" value="asap" checked> No — whenever it's ready</label>
+        <label><input type="radio" name="goLiveMode" value="date"> Yes, by a specific date</label>
+      </div>
+      <input type="date" id="goLiveDate" style="margin-top:8px;max-width:200px;" disabled>
+    </fieldset>
+
+    <div class="field">
+      <label for="sourceOfTruth">Source of truth <span class="hint">Spec, PR, or sample link, if any</span></label>
+      <input type="text" id="sourceOfTruth" placeholder="e.g. aka.ms/devhome-widget-spec">
+    </div>
+
+    <div class="field">
+      <label for="requestedBy">Your name or alias</label>
+      <input type="text" id="requestedBy" required placeholder="e.g. priya@microsoft.com">
+    </div>
+
+    <button type="submit" class="btn primary" id="submitBtn">Submit request</button>
+    <div class="status" id="statusBox"></div>
+  </form>
+</div>
+
+<script>
+const FLOW_URL = ""; // <-- paste your Power Automate "When an HTTP request is received" URL here
+
+const goLiveRadios = document.querySelectorAll('input[name="goLiveMode"]');
+const goLiveDate = document.getElementById('goLiveDate');
+goLiveRadios.forEach(r => r.addEventListener('change', () => {
+  goLiveDate.disabled = document.querySelector('input[name="goLiveMode"]:checked').value !== 'date';
+}));
+
+async function sha256Hex12(text) {
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return hex.slice(0, 12);
+}
+
+function slugify(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40);
+}
+
+document.getElementById('requestForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const statusBox = document.getElementById('statusBox');
+  const submitBtn = document.getElementById('submitBtn');
+  statusBox.className = 'status';
+  statusBox.textContent = '';
+
+  if (!FLOW_URL) {
+    statusBox.className = 'status err show';
+    statusBox.textContent = 'FLOW_URL isn\'t configured yet — see POWER-AUTOMATE-SETUP.md.';
+    return;
+  }
+
+  const summary = document.getElementById('summary').value.trim();
+  const taskKind = document.getElementById('taskKind').value;
+  const risk = document.getElementById('risk').value;
+  const targetRepo = document.getElementById('targetRepo').value.trim() || 'not specified';
+  const targetFile = document.getElementById('targetFile').value.trim() || null;
+  const goLiveMode = document.querySelector('input[name="goLiveMode"]:checked').value;
+  const goLive = goLiveMode === 'date' && goLiveDate.value ? goLiveDate.value : 'no date specified';
+  const sourceOfTruth = document.getElementById('sourceOfTruth').value.trim() || 'none provided';
+  const requestedBy = document.getElementById('requestedBy').value.trim();
+
+  const slug = slugify(summary);
+  const dedupeSeed = `intake-form:${targetRepo}:${slug}:${taskKind}`;
+  const dedupeHash = await sha256Hex12(dedupeSeed);
+
+  const payload = {
+    title: `[request] ${taskKind}: ${summary.slice(0, 100)}`,
+    task_kind: taskKind,
+    risk,
+    target_repo: targetRepo,
+    target_file: targetFile,
+    go_live: goLive,
+    source_of_truth: sourceOfTruth,
+    requested_by: requestedBy,
+    summary,
+    dedupe_hash: dedupeHash,
+    source_system: 'intake-form'
+  };
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting…';
+
+  try {
+    const resp = await fetch(FLOW_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json().catch(() => ({}));
+
+    if (!resp.ok) {
+      throw new Error(data.error || `Flow returned ${resp.status}`);
+    }
+
+    statusBox.className = 'status ok show';
+    if (data.duplicate) {
+      statusBox.innerHTML = `Already tracked — see <a href="${data.url}" target="_blank">${data.id ? '#' + data.id : 'the existing item'}</a>.`;
+    } else {
+      statusBox.innerHTML = `Filed as <a href="${data.url}" target="_blank">${data.id ? '#' + data.id : 'the new item'}</a>. A writer or agent will pick it up from here.`;
+    }
+  } catch (err) {
+    statusBox.className = 'status err show';
+    statusBox.textContent = `Couldn't submit: ${err.message}`;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit request';
+  }
+});
+</script>
+</body>
+</html>
